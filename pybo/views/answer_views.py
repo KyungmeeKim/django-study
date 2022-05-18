@@ -4,10 +4,10 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib import messages
 from django.http import HttpResponseNotAllowed
 
-
 from ..forms import AnswerForm
 from ..models import Question, Answer
-# Answer
+
+
 
 @login_required(login_url='common:login')
 def answer_create(request, question_id):
@@ -25,6 +25,8 @@ def answer_create(request, question_id):
         return HttpResponseNotAllowed('Only POST is possible.')
     context = {'question': question, 'form': form}
     return render (request, 'pybo/question_detail.html', context)
+
+
 
 @login_required(login_url='common:login')
 def answer_modify(request, answer_id):
@@ -44,6 +46,8 @@ def answer_modify(request, answer_id):
     context = {'answer': answer, 'form': form}
     return render(request, 'pybo/answer_form.html', context)
 
+
+
 @login_required(login_url='common:login')
 def answer_delete(request, answer_id):
     anwer = get_object_or_404(request, pk = answer_id)
@@ -51,4 +55,15 @@ def answer_delete(request, answer_id):
         messages.error(request, '삭제 권한이 없습니다.')
     else:
         answer.delete()
+    return redirect('pybo:detail', question_id=answer.question.id)
+
+
+
+@login_required(login_url='common:login')
+def answer_vote(request, answer_id):
+    answer = get_object_or_404(Answer, pk=answer_id)
+    if request.user == answer.author:
+        messages.error(request, '본인이 작성한 글을 추천할 수 없습니다.')
+    else:
+        answer.voter.add(request.user)
     return redirect('pybo:detail', question_id=answer.question.id)
